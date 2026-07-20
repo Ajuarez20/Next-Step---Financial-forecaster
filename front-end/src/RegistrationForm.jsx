@@ -1,17 +1,16 @@
-// RegistrationForm.jsx
 import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // 1. Added this import
+import { useNavigate } from 'react-router-dom';
 
 function RegistrationForm() {
   const [formData, setFormData] = useState({
-    firstname: '',
+    firstName: '',
     lastname: '',
     email: '',
     password: ''
   });
 
-  const navigate = useNavigate(); // 2. Initialized the navigation hook
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -25,26 +24,59 @@ function RegistrationForm() {
     try {
       const response = await axios.post('http://localhost:8080/register', formData);
       console.log('Registration Successful:', response.data);
+      alert('Account created successfully! Please log in.');
       
-      // 3. Replaced the alert with the redirect to dashboard
-      navigate('/dashboard', { 
-        state: { firstName: response.data.firstname } 
-      });
-      
+      // Redirect straight to the login page after successful registration
+      navigate('/login');
     } catch (error) {
       console.error('Registration Error:', error);
-      alert('Registration Failed.');
+      alert('Error registering user. Please try again.');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Register</h2>
-      <input name="firstname" placeholder="First Name" onChange={handleChange} required />
-      <input name="lastname" placeholder="Last Name" onChange={handleChange} required />
-      <input name="email" type="email" placeholder="Email" onChange={handleChange} required />
-      <input name="password" type="password" placeholder="Password" onChange={handleChange} required />
-      <button type="submit">Submit</button>
+      <h2>Create Next Step Account</h2>
+      
+      <input 
+        name="firstName" 
+        placeholder="First Name" 
+        value={formData.firstName}
+        onChange={handleChange} 
+        required 
+      />
+      
+      <input 
+        name="lastname" 
+        placeholder="Last Name" 
+        value={formData.lastname}
+        onChange={handleChange} 
+        required 
+      />
+      
+      <input 
+        name="email" 
+        type="email" 
+        placeholder="Email" 
+        value={formData.email}
+        onChange={handleChange} 
+        required 
+      />
+      
+      <input 
+        name="password" 
+        type="password" 
+        placeholder="Password" 
+        value={formData.password}
+        onChange={handleChange} 
+        required 
+      />
+      
+      <button type="submit">Register</button>
+
+      <p style={{ marginTop: '10px', fontSize: '14px' }}>
+        Already have an account? <a href="/login">Log in here</a>
+      </p>
     </form>
   );
 }
