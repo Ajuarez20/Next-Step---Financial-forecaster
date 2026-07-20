@@ -46,6 +46,7 @@ function Dashboard() {
 
   return (
     <div className="dashboard-layout">
+      {/* Sidebar Navigation */}
       <aside className="sidebar">
         <h2>Next Step</h2>
         <nav>
@@ -56,61 +57,53 @@ function Dashboard() {
             <li>Settings</li>
           </ul>
         </nav>
-        <div style={{ padding: '20px', marginTop: 'auto' }}>
+        <div className="sidebar-footer">
           <button 
+            className="logout-btn"
             onClick={() => navigate('/login')}
-            style={{ 
-              width: '100%', 
-              padding: '10px', 
-              background: '#e74c3c', 
-              color: '#fff', 
-              border: 'none', 
-              borderRadius: '6px', 
-              cursor: 'pointer', 
-              fontWeight: 'bold' 
-            }}
           >
             Log Out
           </button>
         </div>
       </aside>
 
+      {/* Main Workspace */}
       <main className="main-content">
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <header className="main-header">
           <h1>Welcome back, {userName} 👋</h1>
         </header>
 
         {/* Top Metric Cards */}
-        <div className="dashboard-grid" style={{ marginBottom: '25px' }}>
-          <div className="card">
+        <div className="dashboard-grid">
+          <div className="card metric-card">
             <h3>Current Balance</h3>
-            <p style={{ fontSize: '1.8rem', fontWeight: 'bold', margin: '10px 0 0' }}>
+            <p className="metric-value">
               ${inputs.currentSavings.toLocaleString()}
             </p>
           </div>
-          <div className="card">
+          <div className="card metric-card">
             <h3>Monthly Net Flow</h3>
-            <p style={{ fontSize: '1.8rem', fontWeight: 'bold', margin: '10px 0 0', color: monthlyNet >= 0 ? '#27ae60' : '#c0392b' }}>
+            <p className={`metric-value ${monthlyNet >= 0 ? 'positive' : 'negative'}`}>
               ${monthlyNet.toLocaleString()} / mo
             </p>
           </div>
-          <div className="card">
+          <div className="card metric-card">
             <h3>Savings Goal Target</h3>
-            <p style={{ fontSize: '1.8rem', fontWeight: 'bold', margin: '10px 0 0' }}>
+            <p className="metric-value">
               ${inputs.targetGoalAmount.toLocaleString()}
             </p>
           </div>
         </div>
 
         {/* What-If Controls & Interactive Chart */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
+        <div className="content-grid">
           
           {/* Controls Panel */}
-          <div className="card">
+          <div className="card controls-card">
             <h3>What-If Controls</h3>
             
-            <div style={{ marginTop: '15px' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>
+            <div className="control-group">
+              <label>
                 Monthly Income: <strong>${inputs.monthlyIncome.toLocaleString()}</strong>
               </label>
               <input 
@@ -121,12 +114,11 @@ function Dashboard() {
                 step="100" 
                 value={inputs.monthlyIncome} 
                 onChange={handleInputChange} 
-                style={{ width: '100%' }} 
               />
             </div>
 
-            <div style={{ marginTop: '15px' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>
+            <div className="control-group">
+              <label>
                 Monthly Expenses: <strong>${inputs.monthlyExpenses.toLocaleString()}</strong>
               </label>
               <input 
@@ -137,45 +129,45 @@ function Dashboard() {
                 step="100" 
                 value={inputs.monthlyExpenses} 
                 onChange={handleInputChange} 
-                style={{ width: '100%' }} 
               />
             </div>
 
-            <div style={{ marginTop: '15px' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Current Savings ($)</label>
+            <div className="control-group">
+              <label>Current Savings ($)</label>
               <input 
                 type="number" 
                 name="currentSavings" 
                 value={inputs.currentSavings} 
                 onChange={handleInputChange} 
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} 
               />
             </div>
 
-            <div style={{ marginTop: '15px' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Savings Goal ($)</label>
+            <div className="control-group">
+              <label>Savings Goal ($)</label>
               <input 
                 type="number" 
                 name="targetGoalAmount" 
                 value={inputs.targetGoalAmount} 
                 onChange={handleInputChange} 
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} 
               />
             </div>
           </div>
 
           {/* Interactive Chart Panel */}
-          <div className="card">
+          <div className="card chart-card">
             <h3>Savings Trajectory ({inputs.projectionMonths} Months)</h3>
-            <div style={{ width: '100%', height: '320px', marginTop: '15px' }}>
+            <div className="chart-wrapper">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="monthLabel" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => `$${value}`} />
-                  <Line type="monotone" dataKey="projectedSavings" stroke="#2b6cb0" strokeWidth={3} name="Projected Savings" />
-                  <Line type="dash" dataKey="goalTarget" stroke="#e53e3e" strokeDasharray="5 5" name="Savings Goal" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="monthLabel" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip 
+                    formatter={(value) => `$${value.toLocaleString()}`}
+                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#f8fafc' }}
+                  />
+                  <Line type="monotone" dataKey="projectedSavings" stroke="#3b82f6" strokeWidth={3} name="Projected Savings" />
+                  <Line type="dash" dataKey="goalTarget" stroke="#ef4444" strokeDasharray="5 5" name="Savings Goal" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
