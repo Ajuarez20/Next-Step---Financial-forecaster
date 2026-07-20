@@ -27,7 +27,12 @@ public class FinancialProfileService {
 		return profile;
 		
 	}
-	public FinancialProfile calculateMonthlyExpenses() {
+	public Double calculateMonthlyExpenses(Integer Id) {
+		FinancialProfile profile= new FinancialProfile();
+		Double amount=0.0;
+		
+		return amount;
+				
 	}
 		
 		

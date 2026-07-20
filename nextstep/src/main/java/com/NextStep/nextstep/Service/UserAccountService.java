@@ -1,19 +1,10 @@
 package com.NextStep.nextstep.Service;
-<<<<<<< Updated upstream
-
-import java.util.Scanner;
 
 import org.springframework.stereotype.Service;
 
-=======
-
-import org.springframework.stereotype.Service;
 import com.NextStep.nextstep.entity.FinancialProfile;
->>>>>>> Stashed changes
 import com.NextStep.nextstep.entity.UserAccount;
 import com.NextStep.nextstep.repository.UserAccountRepository;
-
-
 
 @Service
 public class UserAccountService {
