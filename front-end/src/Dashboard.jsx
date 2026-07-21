@@ -86,8 +86,42 @@ function Dashboard() {
 
   const monthlyNet = inputs.monthlyIncome - inputs.monthlyExpenses;
 
+  // What-If Forecast State
+  const [inputs, setInputs] = useState({
+    monthlyIncome: 4500,
+    monthlyExpenses: 3000,
+    currentSavings: 5000,
+    targetGoalAmount: 20000,
+    projectionMonths: 24
+  });
+
+  const [chartData, setChartData] = useState([]);
+
+  const fetchForecast = async () => {
+    try {
+      const response = await axios.post('http://localhost:8080/api/forecast', inputs);
+      setChartData(response.data);
+    } catch (error) {
+      console.error('Forecast calculation failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchForecast();
+  }, [inputs]);
+
+  const handleInputChange = (e) => {
+    setInputs({
+      ...inputs,
+      [e.target.name]: parseFloat(e.target.value) || 0
+    });
+  };
+
+  const monthlyNet = inputs.monthlyIncome - inputs.monthlyExpenses;
+
   return (
     <div className="dashboard-layout">
+      {/* Sidebar Navigation */}
       <aside className="sidebar">
         <h2>Next Step</h2>
         <nav>
@@ -116,6 +150,7 @@ function Dashboard() {
         </div>
       </aside>
 
+      {/* Main Workspace */}
       <main className="main-content">
         <header className="main-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
           <div>
