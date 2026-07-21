@@ -2,6 +2,8 @@ package com.NextStep.nextstep.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.NextStep.nextstep.entity.FinancialProfile;
 import com.NextStep.nextstep.entity.UserAccount;
 import com.NextStep.nextstep.repository.UserAccountRepository;
 
@@ -17,6 +19,20 @@ public class UserAccountService {
     @Transactional
     public UserAccount registerUser(UserAccount user) {
         System.out.println("New User start here: Enter Information to begin");
+
+        // Automatically attach a blank profile if one isn't attached yet
+        if (user.getFinancialProfile() == null) {
+            FinancialProfile profile = new FinancialProfile();
+            profile.setMonthlyIncome(0.0);
+            profile.setMonthlyExpenses(0.0);
+            profile.setCurrentSavings(0.0);
+            profile.setTargetGoalAmount(0.0);
+            profile.setDebt(0.0);
+
+            user.setFinancialProfile(profile);
+            profile.setUserAccount(user);
+        }
+
         return userAccountRepository.save(user);
     }
 
@@ -24,7 +40,6 @@ public class UserAccountService {
     public UserAccount loginUser(String email, String password) {
         UserAccount user = userAccountRepository.findByEmail(email);
 
-        // Fixed getpassword() -> getPassword()
         if (user != null && user.getPassword().equals(password)) {
             return user;
         }
