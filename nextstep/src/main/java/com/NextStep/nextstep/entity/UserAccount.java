@@ -23,6 +23,13 @@ public class UserAccount {
     @JsonIgnore
     private String password;
 
+    // Security: Track failed login attempts
+    @JsonIgnore
+    private Integer failedLoginAttempts = 0;
+
+    @JsonIgnore
+    private Boolean accountLocked = false;
+
     // Connects UserAccount to FinancialProfile
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "financial_profile_id")
@@ -49,6 +56,14 @@ public class UserAccount {
         return password;
     }
 
+    public Integer getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public Boolean getAccountLocked() {
+        return accountLocked;
+    }
+
     public FinancialProfile getFinancialProfile() {
         return financialProfile;
     }
@@ -72,6 +87,14 @@ public class UserAccount {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setFailedLoginAttempts(Integer failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
+    }
+
+    public void setAccountLocked(Boolean accountLocked) {
+        this.accountLocked = accountLocked;
     }
 
     public void setFinancialProfile(FinancialProfile financialProfile) {

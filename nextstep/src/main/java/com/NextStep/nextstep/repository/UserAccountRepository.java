@@ -5,5 +5,5 @@ import com.NextStep.nextstep.entity.UserAccount;
 
 public interface UserAccountRepository extends JpaRepository<UserAccount, Integer>{
 
+    UserAccount findByEmail(String email);
 }
-

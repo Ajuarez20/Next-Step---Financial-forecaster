@@ -13,6 +13,11 @@ public class UserAccountService {
 
     private final UserAccountRepository userAccountRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    
+    // Security constants
+    private static final int MAX_LOGIN_ATTEMPTS = 10;
+    private static final String ACCOUNT_LOCKED_MESSAGE = "Account is locked due to too many failed login attempts";
+    private static final String INVALID_CREDENTIALS = "Invalid email or password";
 
     public UserAccountService(UserAccountRepository userAccountRepository) {
         this.userAccountRepository = userAccountRepository;
@@ -21,6 +26,13 @@ public class UserAccountService {
     @Transactional
     public UserAccount registerUser(UserAccount user) {
         System.out.println("New User start here: Enter Information to begin");
+
+        // Validate password requirements
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            if (!PasswordValidator.isValidPassword(user.getPassword())) {
+                throw new RuntimeException("Password requirements not met: " + PasswordValidator.getPasswordErrorMessage(user.getPassword()));
+            }
+        }
 
         // Automatically attach a blank profile if one isn't attached yet
         if (user.getFinancialProfile() == null) {
@@ -35,6 +47,10 @@ public class UserAccountService {
             profile.setUserAccount(user);
         }
 
+        // Initialize security fields
+        user.setFailedLoginAttempts(0);
+        user.setAccountLocked(false);
+
         // Hash the password before saving (if present)
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             String hashed = passwordEncoder.encode(user.getPassword());
@@ -48,10 +64,61 @@ public class UserAccountService {
     public UserAccount loginUser(String email, String password) {
         UserAccount user = userAccountRepository.findByEmail(email);
 
-        if (user != null && user.getPassword() != null && passwordEncoder.matches(password, user.getPassword())) {
+        // Check if user exists
+        if (user == null) {
+            throw new RuntimeException(INVALID_CREDENTIALS);
+        }
+
+        // Check if account is locked
+        if (user.getAccountLocked()) {
+            throw new RuntimeException(ACCOUNT_LOCKED_MESSAGE);
+        }
+
+        // Validate password
+        if (user.getPassword() != null && passwordEncoder.matches(password, user.getPassword())) {
+            // Reset failed login attempts on successful login
+            resetFailedLoginAttempts(user);
             return user;
         }
 
-        throw new RuntimeException("Invalid email or password");
+        // Increment failed login attempts
+        incrementFailedLoginAttempts(user);
+        throw new RuntimeException(INVALID_CREDENTIALS);
+    }
+
+    @Transactional
+    private void incrementFailedLoginAttempts(UserAccount user) {
+        Integer attempts = user.getFailedLoginAttempts();
+        if (attempts == null) {
+            attempts = 0;
+        }
+        attempts++;
+        user.setFailedLoginAttempts(attempts);
+
+        // Lock account after MAX_LOGIN_ATTEMPTS
+        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+            user.setAccountLocked(true);
+            System.err.println("Account locked for email: " + user.getEmail() + " due to " + attempts + " failed login attempts");
+        }
+
+        userAccountRepository.save(user);
+    }
+
+    @Transactional
+    private void resetFailedLoginAttempts(UserAccount user) {
+        user.setFailedLoginAttempts(0);
+        user.setAccountLocked(false);
+        userAccountRepository.save(user);
+    }
+
+    @Transactional
+    public void unlockAccount(String email) {
+        UserAccount user = userAccountRepository.findByEmail(email);
+        if (user != null) {
+            user.setAccountLocked(false);
+            user.setFailedLoginAttempts(0);
+            userAccountRepository.save(user);
+            System.out.println("Account unlocked for email: " + email);
+        }
     }
 }
