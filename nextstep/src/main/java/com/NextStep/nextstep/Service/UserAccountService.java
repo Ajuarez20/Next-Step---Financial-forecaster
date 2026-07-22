@@ -31,9 +31,8 @@ public class UserAccountService {
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             if (!PasswordValidator.isValidPassword(user.getPassword())) {
                 throw new RuntimeException("Password requirements not met: " + PasswordValidator.getPasswordErrorMessage(user.getPassword()));
-            }
+            }   
         }
-
         // Automatically attach a blank profile if one isn't attached yet
         if (user.getFinancialProfile() == null) {
             FinancialProfile profile = new FinancialProfile();
