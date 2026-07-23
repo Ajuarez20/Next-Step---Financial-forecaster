@@ -23,12 +23,13 @@ public class ExpenseService {
 
  
 
-
+// creation of Expense
 	public Expense addExpense(Integer FinancialProfileid , Double amount, String category,String description ) {
 		FinancialProfile profile=financialProfileRepository.findById(FinancialProfileid).orElseThrow(() -> new RuntimeException ("Financial Profile not found"));
 		
 		Expense expense= new Expense();
 		expense.setAmount(amount);
+		
 		expense.setCategory(category);
 		expense.setDescription(description);
 		expense.setDate(LocalDate.now());
@@ -42,9 +43,10 @@ public class ExpenseService {
 	public Expense getExpenseById(Integer id) {
 		return expenserepository.findById(id).orElseThrow(() -> new RuntimeException("Expense Not Found"));
 	}
-	public List<Expense> getAllExpenses(){
-		return expenserepository.findAll();
+	public List<Expense> getAllExpenses(Integer financialProfileId){
+		 return expenserepository.findByFinancialProfileId(financialProfileId);
 	}
+	
 	public void deleteExpense(Integer id) {
 		expenserepository.deleteById(id);
 	}
@@ -57,6 +59,39 @@ public class ExpenseService {
 		expense.setDescription(description);
 		
 		return expenserepository.save(expense);
+		
+	}
+	
+	// Expense Categorization--- NEEDS - required feature
+	public Double calculateNeedsExpenses(Integer financialProfileId){
+
+	    List<Expense> expenses = getAllExpenses(financialProfileId);
+
+	    Double total = 0.0;
+
+	    for(Expense expense : expenses){
+
+	        if(expense.getCategory().equals("NEED")){
+
+	            total += expense.getAmount();
+
+	        }
+	    }
+
+	    return total;
+	}
+	// Expense Categorization --- Required Feature --- Wants 
+	public Double calculateWantsExpenses(Integer financialProfileId) {
+		List<Expense> expenses = getAllExpenses(financialProfileId);
+		 Double total = 0.0;
+		 
+		 for (Expense expense: expenses){
+			 if(expense.getCategory().equals("Want")) {
+				 total +=expense.getAmount();
+			 }
+		 }
+		 return total;
+		
 		
 	}
 	}
