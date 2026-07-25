@@ -1,5 +1,7 @@
 package com.NextStep.nextstep.Service;
 
+import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -114,11 +116,12 @@ public class UserAccountService {
     @Transactional
     public void unlockAccount(String email) {
         UserAccount user = userAccountRepository.findByEmail(email);
-        if (user != null) {
-            user.setAccountLocked(false);
-            user.setFailedLoginAttempts(0);
-            userAccountRepository.save(user);
-            System.out.println("Account unlocked for email: " + email);
+        if (user == null) {
+            throw new NoSuchElementException("No account found for email: " + email);
         }
+        user.setAccountLocked(false);
+        user.setFailedLoginAttempts(0);
+        userAccountRepository.save(user);
+        System.out.println("Account unlocked for email: " + email);
     }
 }
