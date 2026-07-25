@@ -2,22 +2,20 @@ package com.NextStep.nextstep.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.NextStep.nextstep.entity.FinancialProfile;
 import com.NextStep.nextstep.entity.UserAccount;
 import com.NextStep.nextstep.repository.UserAccountRepository;
 
+import java.time.LocalDateTime;
+
 @Service
 public class UserAccountService {
 
+    private static final int MAX_FAILED_ATTEMPTS = 10;
+    private static final long LOCKOUT_MINUTES = 2; // testing (change to 60 for production)
+
     private final UserAccountRepository userAccountRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    
-    // Security constants
-    private static final int MAX_LOGIN_ATTEMPTS = 10;
-    private static final String ACCOUNT_LOCKED_MESSAGE = "Account is locked due to too many failed login attempts";
-    private static final String INVALID_CREDENTIALS = "Invalid email or password";
 
     public UserAccountService(UserAccountRepository userAccountRepository) {
         this.userAccountRepository = userAccountRepository;
@@ -27,13 +25,6 @@ public class UserAccountService {
     public UserAccount registerUser(UserAccount user) {
         System.out.println("New User start here: Enter Information to begin");
 
-        // Validate password requirements
-        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            if (!PasswordValidator.isValidPassword(user.getPassword())) {
-                throw new RuntimeException("Password requirements not met: " + PasswordValidator.getPasswordErrorMessage(user.getPassword()));
-            }   
-        }
-        // Automatically attach a blank profile if one isn't attached yet
         if (user.getFinancialProfile() == null) {
             FinancialProfile profile = new FinancialProfile();
             profile.setMonthlyIncome(0.0);
@@ -46,78 +37,47 @@ public class UserAccountService {
             profile.setUserAccount(user);
         }
 
-        // Initialize security fields
         user.setFailedLoginAttempts(0);
-        user.setAccountLocked(false);
-
-        // Hash the password before saving (if present)
-        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            String hashed = passwordEncoder.encode(user.getPassword());
-            user.setPassword(hashed);
-        }
+        user.setLockoutUntil(null);
 
         return userAccountRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public UserAccount loginUser(String email, String password) {
         UserAccount user = userAccountRepository.findByEmail(email);
 
-        // Check if user exists
         if (user == null) {
-            throw new RuntimeException(INVALID_CREDENTIALS);
+            throw new RuntimeException("Invalid email or password");
         }
 
-        // Check if account is locked
-        if (user.getAccountLocked()) {
-            throw new RuntimeException(ACCOUNT_LOCKED_MESSAGE);
+        LocalDateTime now = LocalDateTime.now();
+
+        if (user.getLockoutUntil() != null && now.isBefore(user.getLockoutUntil())) {
+            throw new RuntimeException("Account is locked. Try again later.");
         }
 
-        // Validate password
-        if (user.getPassword() != null && passwordEncoder.matches(password, user.getPassword())) {
-            // Reset failed login attempts on successful login
-            resetFailedLoginAttempts(user);
-            return user;
+        if (user.getLockoutUntil() != null && !now.isBefore(user.getLockoutUntil())) {
+            user.setLockoutUntil(null);
+            user.setFailedLoginAttempts(0);
         }
 
-        // Increment failed login attempts
-        incrementFailedLoginAttempts(user);
-        throw new RuntimeException(INVALID_CREDENTIALS);
-    }
-
-    @Transactional
-    private void incrementFailedLoginAttempts(UserAccount user) {
-        Integer attempts = user.getFailedLoginAttempts();
-        if (attempts == null) {
-            attempts = 0;
+        if (user.getPassword().equals(password)) {
+            user.setFailedLoginAttempts(0);
+            user.setLockoutUntil(null);
+            return userAccountRepository.save(user);
         }
-        attempts++;
+
+        int attempts = user.getFailedLoginAttempts() + 1;
         user.setFailedLoginAttempts(attempts);
 
-        // Lock account after MAX_LOGIN_ATTEMPTS
-        if (attempts >= MAX_LOGIN_ATTEMPTS) {
-            user.setAccountLocked(true);
-            System.err.println("Account locked for email: " + user.getEmail() + " due to " + attempts + " failed login attempts");
-        }
-
-        userAccountRepository.save(user);
-    }
-
-    @Transactional
-    private void resetFailedLoginAttempts(UserAccount user) {
-        user.setFailedLoginAttempts(0);
-        user.setAccountLocked(false);
-        userAccountRepository.save(user);
-    }
-
-    @Transactional
-    public void unlockAccount(String email) {
-        UserAccount user = userAccountRepository.findByEmail(email);
-        if (user != null) {
-            user.setAccountLocked(false);
-            user.setFailedLoginAttempts(0);
+        if (attempts >= MAX_FAILED_ATTEMPTS) {
+            user.setLockoutUntil(now.plusMinutes(LOCKOUT_MINUTES));
             userAccountRepository.save(user);
-            System.out.println("Account unlocked for email: " + email);
+            throw new RuntimeException("Account locked due to too many failed login attempts. Try again in 2 minutes.");
         }
+
+        userAccountRepository.save(user);
+        throw new RuntimeException("Invalid email or password");
     }
 }
