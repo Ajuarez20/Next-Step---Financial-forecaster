@@ -62,7 +62,7 @@ public class UserAccountService {
         return userAccountRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
+@Transactional
     public UserAccount loginUser(String email, String password) {
         UserAccount user = userAccountRepository.findByEmail(email);
 
