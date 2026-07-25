@@ -1,8 +1,12 @@
 package com.NextStep.nextstep.controller;
 
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +20,9 @@ import com.NextStep.nextstep.entity.UserAccount;
 public class UserAccountController {
     
     private final UserAccountService userAccountService;
+
+    @Value("${admin.secret.token}")
+    private String adminSecretToken;
     
     public UserAccountController(UserAccountService userAccountService) {
         this.userAccountService = userAccountService;
@@ -46,10 +53,21 @@ public class UserAccountController {
     }
 
     @PostMapping("/unlock/{email}")
-    public ResponseEntity<?> unlockAccount(@PathVariable String email) {
+    public ResponseEntity<?> unlockAccount(
+            @PathVariable String email,
+            @RequestHeader("X-Admin-Token") String adminToken) {
+        if (!adminSecretToken.equals(adminToken)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                new ErrorResponse("Access denied")
+            );
+        }
         try {
             userAccountService.unlockAccount(email);
             return ResponseEntity.ok(new SuccessResponse("Account unlocked successfully"));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                new ErrorResponse(e.getMessage())
+            );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ErrorResponse("Failed to unlock account: " + e.getMessage())

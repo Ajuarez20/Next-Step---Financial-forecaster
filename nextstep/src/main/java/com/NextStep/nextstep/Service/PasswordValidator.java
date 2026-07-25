@@ -29,6 +29,16 @@ public class PasswordValidator {
             return false;
         }
 
+        // Check for lowercase letter
+        if (!Pattern.compile("[a-z]").matcher(password).find()) {
+            return false;
+        }
+
+        // Check for digit
+        if (!Pattern.compile("[0-9]").matcher(password).find()) {
+            return false;
+        }
+
         // Check for special character
         if (!Pattern.compile(SPECIAL_CHAR_PATTERN).matcher(password).find()) {
             return false;
