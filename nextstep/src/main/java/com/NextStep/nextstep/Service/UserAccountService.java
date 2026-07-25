@@ -62,7 +62,7 @@ public class UserAccountService {
         return userAccountRepository.save(user);
     }
 
-@Transactional
+    @Transactional
     public UserAccount loginUser(String email, String password) {
         UserAccount user = userAccountRepository.findByEmail(email);
 
@@ -88,7 +88,6 @@ public class UserAccountService {
         throw new RuntimeException(INVALID_CREDENTIALS);
     }
 
-    @Transactional
     private void incrementFailedLoginAttempts(UserAccount user) {
         Integer attempts = user.getFailedLoginAttempts();
         if (attempts == null) {
@@ -106,7 +105,6 @@ public class UserAccountService {
         userAccountRepository.save(user);
     }
 
-    @Transactional
     private void resetFailedLoginAttempts(UserAccount user) {
         user.setFailedLoginAttempts(0);
         user.setAccountLocked(false);
