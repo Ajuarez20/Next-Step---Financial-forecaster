@@ -31,10 +31,7 @@ public class ExpenseController {
     public ResponseEntity<?> addExpense(@PathVariable Integer profileId, @RequestBody Expense expense) {
         try {
             FinancialProfile profile = profileRepository.findById(profileId)
-                    .orElseGet(() -> {
-                        FinancialProfile newProfile = new FinancialProfile();
-                        return profileRepository.save(newProfile);
-                    });
+                    .orElseThrow(() -> new RuntimeException("Financial Profile not found"));
 
             expense.setFinancialProfile(profile);
             if (expense.getDate() == null) {
