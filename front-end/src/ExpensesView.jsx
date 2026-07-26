@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-export default function ExpensesView({ onExpenseChange, expenses = [], categoryLimits = {} }) {
+export default function ExpensesView({ onExpenseChange, expenses = [], limits = {} }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [form, setForm] = useState({
     amount: '',
@@ -81,7 +81,7 @@ export default function ExpensesView({ onExpenseChange, expenses = [], categoryL
     other: 100
   };
 
-  const activeLimits = Object.keys(categoryLimits).length > 0 ? categoryLimits : defaultLimits;
+  const activeLimits = Object.keys(limits).length > 0 ? limits : defaultLimits;
 
   // Calculate category totals dynamically from expenses list
   const categoryTotals = expenses.reduce((acc, item) => {
