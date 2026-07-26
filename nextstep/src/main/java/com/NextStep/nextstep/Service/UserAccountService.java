@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class UserAccountService {
 
     private static final int MAX_FAILED_ATTEMPTS = 10;
-    private static final long LOCKOUT_MINUTES = 2;
+    private static final long LOCKOUT_MINUTES = 60; // 60 minutes
 
     // Practical email regex (case-insensitive)
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
