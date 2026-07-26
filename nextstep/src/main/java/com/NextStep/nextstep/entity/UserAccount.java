@@ -1,12 +1,15 @@
 package com.NextStep.nextstep.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,10 +22,17 @@ public class UserAccount {
     private String firstname;
     private String lastname;
     private String email;
+
+    @JsonIgnore
     private String password;
 
-    // Lockout fields
+    @Column(name = "failed_login_attempts")
     private int failedLoginAttempts = 0;
+
+    @Column(name = "locked_account")
+    private boolean lockedAccount = false;
+
+    @Column(name = "lockout_until")
     private LocalDateTime lockoutUntil;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -35,6 +45,7 @@ public class UserAccount {
     public String getEmail() { return email; }
     public String getPassword() { return password; }
     public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    public boolean isLockedAccount() { return lockedAccount; }
     public LocalDateTime getLockoutUntil() { return lockoutUntil; }
     public FinancialProfile getFinancialProfile() { return financialProfile; }
 
@@ -44,6 +55,7 @@ public class UserAccount {
     public void setEmail(String email) { this.email = email; }
     public void setPassword(String password) { this.password = password; }
     public void setFailedLoginAttempts(int failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+    public void setLockedAccount(boolean lockedAccount) { this.lockedAccount = lockedAccount; }
     public void setLockoutUntil(LocalDateTime lockoutUntil) { this.lockoutUntil = lockoutUntil; }
     public void setFinancialProfile(FinancialProfile financialProfile) { this.financialProfile = financialProfile; }
 }
