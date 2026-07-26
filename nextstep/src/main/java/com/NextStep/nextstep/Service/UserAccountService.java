@@ -24,6 +24,24 @@ public class UserAccountService {
         Pattern.CASE_INSENSITIVE
     );
 
+    // Password regex: at least 8 characters, one uppercase, one lowercase, one number, one special character
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile(
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,}$"
+    );
+
+    private void validatePassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new AuthFailureException("Password is required");
+        }
+
+        String normalized = password.trim();
+        if (!PASSWORD_PATTERN.matcher(normalized).matches()) {
+            throw new AuthFailureException(
+                "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
+            );
+        }
+    }
+
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -41,10 +59,7 @@ public class UserAccountService {
     @Transactional
     public UserAccount registerUser(UserAccount user) {
         validateEmail(user.getEmail());
-
-        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
-            throw new AuthFailureException("Password is required");
-        }
+        validatePassword(user.getPassword());
 
         if (user.getFinancialProfile() == null) {
             FinancialProfile profile = new FinancialProfile();
@@ -57,7 +72,9 @@ public class UserAccountService {
             profile.setUserAccount(user);
         }
 
+        // Hash exactly once
         user.setPassword(passwordEncoder.encode(user.getPassword().trim()));
+
         user.setFailedLoginAttempts(0);
         user.setLockedAccount(false);
         user.setLockoutUntil(null);
