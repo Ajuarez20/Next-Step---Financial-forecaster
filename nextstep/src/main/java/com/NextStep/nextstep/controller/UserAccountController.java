@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.NextStep.nextstep.Service.UserAccountService;
 import com.NextStep.nextstep.entity.UserAccount;
 
@@ -70,7 +71,9 @@ public class UserAccountController {
     }
 
     public static class RegisterRequest {
+        @JsonAlias({"firstName", "firstname"})
         private String firstname;
+
         private String lastname;
         private String email;
         private String password;

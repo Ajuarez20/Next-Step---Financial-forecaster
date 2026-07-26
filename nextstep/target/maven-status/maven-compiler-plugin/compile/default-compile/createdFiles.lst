@@ -15,6 +15,7 @@ com\NextStep\nextstep\entity\UserAccount.class
 com\NextStep\nextstep\config\CorsConfig.class
 com\NextStep\nextstep\controller\UserAccountController$RegisterRequest.class
 com\NextStep\nextstep\Service\ExpenseService.class
+com\NextStep\nextstep\dto\RegisterRequest.class
 com\NextStep\nextstep\controller\IncomeController.class
 com\NextStep\nextstep\repository\IncomeRepository.class
 com\NextStep\nextstep\repository\UserAccountRepository.class

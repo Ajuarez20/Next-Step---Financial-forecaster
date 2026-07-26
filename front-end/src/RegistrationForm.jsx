@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 function RegistrationForm() {
   const [formData, setFormData] = useState({
-    firstName: '',
+    firstname: '',
     lastname: '',
     email: '',
     password: ''
@@ -20,13 +20,23 @@ function RegistrationForm() {
   };
 
   const handleSubmit = async (e) => {
+    throw new Error("REGISTRATION FORM MARKER");
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/register', formData);
+      const payload = {
+        firstname: "FORCE_FIRSTNAME_TEST",
+        lastname: formData.lastname ?? "",
+        email: formData.email ?? "",
+        password: formData.password ?? ""
+      };
+
+      console.log("REGISTER PAYLOAD SENT:", payload);
+      console.log("REG_FORM_MARKER_V2", { formData });
+      debugger;
+      
+      const response = await axios.post('http://localhost:8080/register', payload);
       console.log('Registration Successful:', response.data);
       alert('Account created successfully! Please log in.');
-      
-      // Redirect straight to the login page after successful registration
       navigate('/login');
     } catch (error) {
       console.error('Registration Error:', error);
@@ -39,9 +49,9 @@ function RegistrationForm() {
       <h2>Create Next Step Account</h2>
       
       <input 
-        name="firstName" 
+        name="firstname" 
         placeholder="First Name" 
-        value={formData.firstName}
+        value={formData.firstname}
         onChange={handleChange} 
         required 
       />
