@@ -14,7 +14,6 @@ public class UserAccountService {
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
       
-    // The constructor now takes BOTH the repository and the encoder
     public UserAccountService(UserAccountRepository userAccountRepository, PasswordEncoder passwordEncoder) {
         this.userAccountRepository = userAccountRepository;
         this.passwordEncoder = passwordEncoder;
@@ -27,7 +26,6 @@ public class UserAccountService {
         user.setLastname(lastname);
         user.setEmail(email);
         
-        // Encode the password before saving it to the database
         user.setPassword(passwordEncoder.encode(password));
         
         FinancialProfile profile = new FinancialProfile();
@@ -45,7 +43,6 @@ public class UserAccountService {
 
     @Transactional
     public UserAccount registerUser(UserAccount user) {
-        // Encode the password for this registration method too
         if (user.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
@@ -69,9 +66,16 @@ public class UserAccountService {
     public UserAccount loginUser(String email, String password) {
         UserAccount user = userAccountRepository.findByEmail(email);
 
-        // Securely compare the raw password against the encoded password in the database
-        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return user;
+        if (user != null) {
+            // Check if the account has been locked before verifying password
+            if (!user.isAccountNonLocked()) {
+                throw new RuntimeException("Account is locked due to multiple failed login attempts.");
+            }
+
+            // Securely compare the raw password against the encoded password
+            if (passwordEncoder.matches(password, user.getPassword())) {
+                return user;
+            }
         }
 
         throw new RuntimeException("Invalid email or password");
