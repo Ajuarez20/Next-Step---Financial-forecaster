@@ -1,18 +1,17 @@
 package com.NextStep.nextstep.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
-
-import java.time.LocalDateTime;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "user_accounts")
 public class UserAccount {
 
     @Id
@@ -23,39 +22,70 @@ public class UserAccount {
     private String lastname;
     private String email;
 
-    @JsonIgnore
+    // Prevents the password from ever being sent back in JSON responses (Security Best Practice)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
-
-    @Column(name = "failed_login_attempts")
-    private int failedLoginAttempts = 0;
-
-    @Column(name = "locked_account")
-    private boolean lockedAccount = false;
-
-    @Column(name = "lockout_until")
-    private LocalDateTime lockoutUntil;
-
+    
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "financial_profile_id")
     private FinancialProfile financialProfile;
 
-    public Integer getId() { return id; }
-    public String getFirstname() { return firstname; }
-    public String getLastname() { return lastname; }
-    public String getEmail() { return email; }
-    public String getPassword() { return password; }
-    public int getFailedLoginAttempts() { return failedLoginAttempts; }
-    public boolean isLockedAccount() { return lockedAccount; }
-    public LocalDateTime getLockoutUntil() { return lockoutUntil; }
-    public FinancialProfile getFinancialProfile() { return financialProfile; }
+    public UserAccount() {
+    }
 
-    public void setId(Integer id) { this.id = id; }
-    public void setFirstname(String firstname) { this.firstname = firstname; }
-    public void setLastname(String lastname) { this.lastname = lastname; }
-    public void setEmail(String email) { this.email = email; }
-    public void setPassword(String password) { this.password = password; }
-    public void setFailedLoginAttempts(int failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
-    public void setLockedAccount(boolean lockedAccount) { this.lockedAccount = lockedAccount; }
-    public void setLockoutUntil(LocalDateTime lockoutUntil) { this.lockoutUntil = lockoutUntil; }
-    public void setFinancialProfile(FinancialProfile financialProfile) { this.financialProfile = financialProfile; }
+    public UserAccount(String firstname, String lastname, String email, String password) {
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.email = email;
+        this.password = password;
+    }
+
+    // Getters and Setters
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public FinancialProfile getFinancialProfile() {
+        return financialProfile;
+    }
+
+    public void setFinancialProfile(FinancialProfile financialProfile) {
+        this.financialProfile = financialProfile;
+    }
 }

@@ -1,9 +1,13 @@
 package com.NextStep.nextstep.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.NextStep.nextstep.entity.UserAccount;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface UserAccountRepository extends JpaRepository<UserAccount, Integer>{
-
+@Repository
+public interface UserAccountRepository extends JpaRepository<UserAccount, Integer> {
+    
+    // Required by UserAccountService for user login lookup
     UserAccount findByEmail(String email);
+    
 }

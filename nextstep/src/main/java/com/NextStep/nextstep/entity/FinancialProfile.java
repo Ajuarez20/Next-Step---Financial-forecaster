@@ -3,6 +3,7 @@ package com.NextStep.nextstep.entity;
 import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,13 +20,10 @@ public class FinancialProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // Working Dashboard & Forecast fields
     private Double monthlyIncome;
     private Double monthlyExpenses;
     private Double currentSavings;
     private Double targetGoalAmount;
-
-    // Added from friend's code
     private Double debt;
 
     @OneToMany(mappedBy = "financialProfile", cascade = CascadeType.ALL)
@@ -44,11 +42,23 @@ public class FinancialProfile {
         this.id = id;
     }
 
+    // Standard getter returning null if not provided (prevents overwriting DB data on partial updates)
     public Double getMonthlyIncome() {
         return monthlyIncome;
     }
 
+    @JsonProperty("monthlyIncome")
     public void setMonthlyIncome(Double monthlyIncome) {
+        this.monthlyIncome = monthlyIncome;
+    }
+
+    @JsonProperty("income")
+    public void setIncomeFromJson(Double income) {
+        this.monthlyIncome = income;
+    }
+
+    @JsonProperty("monthly_income")
+    public void setMonthlyIncomeSnakeCase(Double monthlyIncome) {
         this.monthlyIncome = monthlyIncome;
     }
 
@@ -60,11 +70,23 @@ public class FinancialProfile {
         this.monthlyExpenses = monthlyExpenses;
     }
 
+    // Standard getter returning null if not provided
     public Double getCurrentSavings() {
         return currentSavings;
     }
 
+    @JsonProperty("currentSavings")
     public void setCurrentSavings(Double currentSavings) {
+        this.currentSavings = currentSavings;
+    }
+
+    @JsonProperty("savings")
+    public void setSavingsFromJson(Double savings) {
+        this.currentSavings = savings;
+    }
+
+    @JsonProperty("current_savings")
+    public void setCurrentSavingsSnakeCase(Double currentSavings) {
         this.currentSavings = currentSavings;
     }
 

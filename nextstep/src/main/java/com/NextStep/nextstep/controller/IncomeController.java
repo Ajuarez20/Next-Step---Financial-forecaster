@@ -42,6 +42,10 @@ public class IncomeController {
             }
 
             Income savedIncome = incomeRepository.save(income);
+
+            // Recalculate and update total monthly income on the profile
+            updateProfileMonthlyIncome(profile);
+
             return ResponseEntity.ok(savedIncome);
 
         } catch (Exception e) {
@@ -52,7 +56,25 @@ public class IncomeController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteIncome(@PathVariable Integer id) {
-        incomeRepository.deleteById(id);
+        Income income = incomeRepository.findById(id).orElse(null);
+        if (income != null && income.getFinancialProfile() != null) {
+            FinancialProfile profile = income.getFinancialProfile();
+            incomeRepository.deleteById(id);
+            updateProfileMonthlyIncome(profile);
+        } else {
+            incomeRepository.deleteById(id);
+        }
         return ResponseEntity.ok().build();
+    }
+
+    // Helper method to keep profile monthlyIncome synchronized with actual income records
+    private void updateProfileMonthlyIncome(FinancialProfile profile) {
+        List<Income> incomes = incomeRepository.findAll().stream()
+            .filter(i -> i.getFinancialProfile() != null && i.getFinancialProfile().getId().equals(profile.getId()))
+            .toList();
+
+        double totalIncome = incomes.stream().mapToDouble(i -> i.getAmount() != null ? i.getAmount() : 0.0).sum();
+        profile.setMonthlyIncome(totalIncome);
+        profileRepository.save(profile);
     }
 }
