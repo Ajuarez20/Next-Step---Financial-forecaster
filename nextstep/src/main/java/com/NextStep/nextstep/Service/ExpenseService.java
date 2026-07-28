@@ -42,6 +42,10 @@ public class ExpenseService {
             .orElseThrow(() -> new RuntimeException("Expense Not Found"));
     }
 
+    public List<Expense> getAllExpenses(Integer financialProfileId) {
+        return expenseRepository.findByFinancialProfileId(financialProfileId);
+    }
+
     public List<Expense> getAllExpenses() {
         return expenseRepository.findAll();
     }
@@ -59,5 +63,27 @@ public class ExpenseService {
         expense.setDescription(description);
 
         return expenseRepository.save(expense);
+    }
+
+    public Double calculateNeedsExpenses(Integer financialProfileId) {
+        List<Expense> expenses = getAllExpenses(financialProfileId);
+        double total = 0.0;
+        for (Expense expense : expenses) {
+            if ("NEED".equalsIgnoreCase(expense.getCategory()) || "needs".equalsIgnoreCase(expense.getCategory())) {
+                total += expense.getAmount();
+            }
+        }
+        return total;
+    }
+
+    public Double calculateWantsExpenses(Integer financialProfileId) {
+        List<Expense> expenses = getAllExpenses(financialProfileId);
+        double total = 0.0;
+        for (Expense expense : expenses) {
+            if ("WANT".equalsIgnoreCase(expense.getCategory()) || "wants".equalsIgnoreCase(expense.getCategory())) {
+                total += expense.getAmount();
+            }
+        }
+        return total;
     }
 }

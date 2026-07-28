@@ -11,16 +11,34 @@ import com.NextStep.nextstep.repository.UserAccountRepository;
 public class UserAccountService {
 
     private final UserAccountRepository userAccountRepository;
-
+      
     public UserAccountService(UserAccountRepository userAccountRepository) {
         this.userAccountRepository = userAccountRepository;
+    }  
+      
+    @Transactional
+    public UserAccount registerUser(String firstname, String lastname, String email, String password) {
+        UserAccount user = new UserAccount();
+        user.setFirstname(firstname);
+        user.setLastname(lastname);
+        user.setEmail(email);
+        user.setPassword(password);
+        
+        FinancialProfile profile = new FinancialProfile();
+        profile.setMonthlyIncome(0.0);
+        profile.setMonthlyExpenses(0.0);
+        profile.setCurrentSavings(0.0);
+        profile.setTargetGoalAmount(0.0);
+        profile.setDebt(0.0);
+        
+        user.setFinancialProfile(profile);
+        profile.setUserAccount(user);
+        
+        return userAccountRepository.save(user);
     }
 
     @Transactional
     public UserAccount registerUser(UserAccount user) {
-        System.out.println("New User start here: Enter Information to begin");
-
-        // Automatically attach a blank profile if one isn't attached yet
         if (user.getFinancialProfile() == null) {
             FinancialProfile profile = new FinancialProfile();
             profile.setMonthlyIncome(0.0);

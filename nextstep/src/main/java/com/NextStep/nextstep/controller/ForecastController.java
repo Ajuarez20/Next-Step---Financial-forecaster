@@ -18,7 +18,7 @@ public class ForecastController {
     }
 
     @PostMapping("/api/forecast")
-    public List calculateForecast(@RequestBody ForecastRequest request) {
+    public List<ForecastDataPoint> calculateForecast(@RequestBody ForecastRequest request) { // FIXED: Added <ForecastDataPoint> generic
         int months = request.getProjectionMonths() > 0 ? request.getProjectionMonths() : 12;
 
         return forecastService.generateProjection(
