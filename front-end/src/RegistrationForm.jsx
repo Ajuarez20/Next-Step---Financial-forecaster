@@ -21,11 +21,14 @@ export default function RegistrationForm() {
     setErrorMsg('');
 
     try {
-      await axios.post('http://localhost:8080/api/auth/register', form);
+      // Fixed URL path to match UserAccountController (/register instead of /api/auth/register)
+      await axios.post('http://localhost:8080/register', form);
       navigate('/login');
     } catch (err) {
       console.error('Registration failed:', err);
-      navigate('/dashboard', { state: { firstName: form.firstName || 'User' } });
+      // Capture the backend error message (e.g., email already in use) and display it
+      const message = err.response?.data?.error || err.response?.data?.message || 'Registration failed. Please try again.';
+      setErrorMsg(message);
     }
   };
 
