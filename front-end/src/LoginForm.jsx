@@ -16,12 +16,14 @@ export default function LoginForm() {
     setErrorMsg('');
 
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', form);
-      const firstName = response.data?.firstName || "User";
+      const response = await axios.post('http://localhost:8080/login', form);
+      const firstName = response.data?.firstname || "User";
       navigate('/dashboard', { state: { firstName } });
     } catch (err) {
       console.error('Login failed:', err);
-      navigate('/dashboard', { state: { firstName: 'Moises' } });
+      // Properly extract the backend ErrorResponse structure (err.response.data.error)
+      const message = err.response?.data?.error || err.response?.data?.message || 'Invalid email or password.';
+      setErrorMsg(message);
     }
   };
 
