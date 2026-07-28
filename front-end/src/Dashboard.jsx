@@ -6,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import ExpensesView from './ExpensesView';
 import IncomeView from './IncomeView';
 import ForecastsView from './ForecastsView';
+import SimulationView from './SimulationView';
 import SettingsView from './SettingsView';
 import CopilotInsights from './CopilotInsights';
 import './Dashboard.css';
@@ -15,6 +16,8 @@ function Dashboard() {
   const navigate = useNavigate();
   
   const userName = location.state?.firstName || "Guest"; 
+  const userId = location.state?.id || 1; 
+  
   const [activeTab, setActiveTab] = useState('overview');
 
   const [inputs, setInputs] = useState({
@@ -28,6 +31,8 @@ function Dashboard() {
   const [expensesList, setExpensesList] = useState([]);
   const [incomeList, setIncomeList] = useState([]);
   const [chartData, setChartData] = useState([]);
+  
+  const [financialScore, setFinancialScore] = useState(0);
 
   const [categoryLimits, setCategoryLimits] = useState({
     food: 200,
@@ -38,31 +43,55 @@ function Dashboard() {
 
   const fetchAllData = async () => {
     try {
-      // Fetch Expenses
       const expResponse = await axios.get('http://localhost:8080/api/expenses/all');
       const expItems = expResponse.data || [];
       setExpensesList(expItems);
       const expenseTotal = expItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
-      // Fetch Income
       const incResponse = await axios.get('http://localhost:8080/api/income/all');
       const incItems = incResponse.data || [];
       setIncomeList(incItems);
       const incomeTotal = incItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
       
-      setInputs((prev) => ({
-        ...prev,
-        monthlyExpenses: expenseTotal,
-        monthlyIncome: incomeTotal > 0 ? incomeTotal : prev.monthlyIncome
-      }));
+      const profileRes = await axios.get(`http://localhost:8080/api/financialprofile/${userId}`).catch(() => null);
+      if (profileRes && profileRes.data) {
+        setInputs(prev => ({
+          ...prev,
+          monthlyIncome: profileRes.data.monthlyIncome ?? incomeTotal ?? prev.monthlyIncome,
+          currentSavings: profileRes.data.currentSavings ?? prev.currentSavings,
+          targetGoalAmount: profileRes.data.targetGoalAmount ?? prev.targetGoalAmount,
+          monthlyExpenses: expenseTotal
+        }));
+      } else {
+        setInputs((prev) => ({
+          ...prev,
+          monthlyExpenses: expenseTotal,
+          monthlyIncome: incomeTotal > 0 ? incomeTotal : prev.monthlyIncome
+        }));
+      }
     } catch (error) {
       console.error('Failed to fetch financial data:', error);
     }
   };
 
-  useEffect(() => {
+  const fetchFinancialScore = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/api/financialprofile/${userId}/financialscore`);
+      setFinancialScore(response.data || 0);
+    } catch (error) {
+      console.error('Failed to fetch Financial Score:', error.message);
+      setFinancialScore(0);
+    }
+  };
+
+  const refreshAll = () => {
     fetchAllData();
-  }, []);
+    fetchFinancialScore();
+  };
+
+  useEffect(() => {
+    refreshAll();
+  }, [userId]);
 
   const fetchForecast = async () => {
     try {
@@ -77,44 +106,33 @@ function Dashboard() {
     fetchForecast();
   }, [inputs]);
 
-  const handleInputChange = (e) => {
-    setInputs({
-      ...inputs,
-      [e.target.name]: parseFloat(e.target.value) || 0
-    });
-  };
-
-  const monthlyNet = inputs.monthlyIncome - inputs.monthlyExpenses;
-
-  // What-If Forecast State
-  const [inputs, setInputs] = useState({
-    monthlyIncome: 4500,
-    monthlyExpenses: 3000,
-    currentSavings: 5000,
-    targetGoalAmount: 20000,
-    projectionMonths: 24
-  });
-
-  const [chartData, setChartData] = useState([]);
-
-  const fetchForecast = async () => {
+  const saveProfileToBackend = async (updatedFields) => {
     try {
-      const response = await axios.post('http://localhost:8080/api/forecast', inputs);
-      setChartData(response.data);
+      await axios.put(`http://localhost:8080/api/financialprofile/${userId}`, {
+        monthlyIncome: updatedFields.monthlyIncome,
+        currentSavings: updatedFields.currentSavings,
+        debt: updatedFields.debt || 0
+      });
+      fetchFinancialScore();
     } catch (error) {
-      console.error('Forecast calculation failed:', error);
+      console.error('Failed to sync profile to backend:', error);
     }
   };
 
-  useEffect(() => {
-    fetchForecast();
-  }, [inputs]);
-
   const handleInputChange = (e) => {
-    setInputs({
+    const { name, value } = e.target;
+    const numericValue = parseFloat(value) || 0;
+    
+    const updatedInputs = {
       ...inputs,
-      [e.target.name]: parseFloat(e.target.value) || 0
-    });
+      [name]: numericValue
+    };
+    
+    setInputs(updatedInputs);
+
+    if (name === 'currentSavings' || name === 'monthlyIncome' || name === 'debt') {
+      saveProfileToBackend(updatedInputs);
+    }
   };
 
   const monthlyNet = inputs.monthlyIncome - inputs.monthlyExpenses;
@@ -132,8 +150,11 @@ function Dashboard() {
             <li className={activeTab === 'forecasts' ? 'active' : ''} onClick={() => setActiveTab('forecasts')} style={{ cursor: 'pointer' }}>
               <span style={{ marginRight: '12px' }}>📈</span> Forecasts
             </li>
+            <li className={activeTab === 'simulation' ? 'active' : ''} onClick={() => setActiveTab('simulation')} style={{ cursor: 'pointer' }}>
+              <span style={{ marginRight: '12px' }}>🧪</span> Simulation
+            </li>
             <li className={activeTab === 'income' ? 'active' : ''} onClick={() => setActiveTab('income')} style={{ cursor: 'pointer' }}>
-              <span style={{ marginRight: '12px' }}>💰</span> Income
+              <span style={{ marginRight: '12px' }}>💵</span> Income
             </li>
             <li className={activeTab === 'expenses' ? 'active' : ''} onClick={() => setActiveTab('expenses')} style={{ cursor: 'pointer' }}>
               <span style={{ marginRight: '12px' }}>💳</span> Expenses
@@ -172,6 +193,12 @@ function Dashboard() {
             <CopilotInsights inputs={inputs} expenses={expensesList} categoryLimits={categoryLimits} />
 
             <div className="dashboard-grid">
+              <div className="card metric-card" style={{ background: 'linear-gradient(135deg, rgba(30,41,59,1) 0%, rgba(15,23,42,1) 100%)', border: '1px solid #3b82f6' }}>
+                <h3 style={{ color: '#60a5fa', textTransform: 'uppercase' }}>Financial Score</h3>
+                <p className="metric-value" style={{ color: '#fff', fontSize: '2.5rem', margin: '10px 0' }}>{financialScore}</p>
+                <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>Powered by Next Step</p>
+              </div>
+
               <div className="card metric-card">
                 <h3>Current Balance</h3>
                 <p className="metric-value">${inputs.currentSavings.toLocaleString()}</p>
@@ -223,7 +250,7 @@ function Dashboard() {
                       <YAxis stroke="#94a3b8" />
                       <Tooltip formatter={(value) => `$${value.toLocaleString()}`} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#f8fafc' }} />
                       <Line type="monotone" dataKey="projectedSavings" stroke="#3b82f6" strokeWidth={3} name="Projected Savings" />
-                      <Line type="dash" dataKey="goalTarget" stroke="#ef4444" strokeDasharray="5 5" name="Savings Goal" />
+                      <Line type="monotone" dataKey="goalTarget" stroke="#ef4444" strokeDasharray="5 5" name="Savings Goal" />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -236,12 +263,21 @@ function Dashboard() {
           <ForecastsView monthlyIncome={inputs.monthlyIncome} monthlyExpenses={inputs.monthlyExpenses} currentSavings={inputs.currentSavings} targetGoalAmount={inputs.targetGoalAmount} />
         )}
 
+        {activeTab === 'simulation' && (
+          <SimulationView 
+            financialProfileId={userId} 
+            currentSavings={inputs.currentSavings}
+            monthlyIncome={inputs.monthlyIncome}
+            monthlyExpenses={inputs.monthlyExpenses}
+          />
+        )}
+
         {activeTab === 'income' && (
-          <IncomeView onIncomeChange={fetchAllData} incomes={incomeList} />
+          <IncomeView onIncomeChange={refreshAll} incomes={incomeList} financialProfileId={userId} />
         )}
 
         {activeTab === 'expenses' && (
-          <ExpensesView onExpenseChange={fetchAllData} expenses={expensesList} />
+          <ExpensesView onExpenseChange={refreshAll} expenses={expensesList} limits={categoryLimits} financialProfileId={userId} />
         )}
 
         {activeTab === 'settings' && (
