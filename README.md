@@ -1,2 +1,2 @@
 # Next-Step---Financial-forecaster
----- to be filled out.
+Next step is a financial forecaster tool that was created to help users deal with the problems of financial literacy in our country.
