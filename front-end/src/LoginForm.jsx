@@ -17,8 +17,23 @@ export default function LoginForm() {
 
     try {
       const response = await axios.post('http://localhost:8080/login', form);
-      const firstName = response.data?.firstname || "User";
-      navigate('/dashboard', { state: { firstName } });
+const userId = response.data?.id;
+const firstName = response.data?.firstname || "User";
+const financialProfileId = response.data?.financialProfile?.id;
+
+if (!userId || !financialProfileId) {
+  setErrorMsg('Your account is missing a financial profile.');
+  return;
+}
+
+navigate('/dashboard', {
+  state: {
+    userId,
+    firstName,
+    financialProfileId
+  }
+});
+      
     } catch (err) {
       console.error('Login failed:', err);
       // Properly extract the backend ErrorResponse structure (err.response.data.error)

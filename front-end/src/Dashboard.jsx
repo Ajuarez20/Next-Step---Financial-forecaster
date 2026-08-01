@@ -11,20 +11,33 @@ import SettingsView from './SettingsView';
 import CopilotInsights from './CopilotInsights';
 import './Dashboard.css';
 
+
 function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
+
   
-  const userName = location.state?.firstName || "Guest"; 
-  const userId = location.state?.id || 1; 
-  
+ const userName = location.state?.firstName || "Guest";
+const userId = location.state?.userId;
+const financialProfileId = location.state?.financialProfileId;
+useEffect(() => {
+
+    if (!userId || !financialProfileId) {
+
+        navigate("/login", { replace: true });
+
+    }
+
+}, [userId, financialProfileId, navigate]);
+
   const [activeTab, setActiveTab] = useState('overview');
 
   const [inputs, setInputs] = useState({
-    monthlyIncome: 4500,
-    monthlyExpenses: 3000,
-    currentSavings: 5000,
-    targetGoalAmount: 20000,
+    monthlyIncome: 0,
+    monthlyExpenses: 0,
+    currentSavings: 0,
+    debt:0,
+    targetGoalAmount: 0,
     projectionMonths: 24
   });
 
@@ -41,42 +54,73 @@ function Dashboard() {
     utilities: 150
   });
 
-  const fetchAllData = async () => {
-    try {
-      const expResponse = await axios.get('http://localhost:8080/api/expenses/all');
-      const expItems = expResponse.data || [];
-      setExpensesList(expItems);
-      const expenseTotal = expItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+ const fetchAllData = async () => {
+  try {
+    const expResponse = await axios.get(
+      `http://localhost:8080/api/expenses/financialprofiles/${financialProfileId}/expenses`
+    );
 
-      const incResponse = await axios.get('http://localhost:8080/api/income/all');
-      const incItems = incResponse.data || [];
-      setIncomeList(incItems);
-      const incomeTotal = incItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-      
-      const profileRes = await axios.get(`http://localhost:8080/api/financialprofile/${userId}`).catch(() => null);
-      if (profileRes && profileRes.data) {
-        setInputs(prev => ({
-          ...prev,
-          monthlyIncome: profileRes.data.monthlyIncome ?? incomeTotal ?? prev.monthlyIncome,
-          currentSavings: profileRes.data.currentSavings ?? prev.currentSavings,
-          targetGoalAmount: profileRes.data.targetGoalAmount ?? prev.targetGoalAmount,
-          monthlyExpenses: expenseTotal
-        }));
-      } else {
-        setInputs((prev) => ({
-          ...prev,
-          monthlyExpenses: expenseTotal,
-          monthlyIncome: incomeTotal > 0 ? incomeTotal : prev.monthlyIncome
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to fetch financial data:', error);
+    const expItems = expResponse.data || [];
+    setExpensesList(expItems);
+
+    const expenseTotal = expItems.reduce(
+      (sum, item) => sum + (Number(item.amount) || 0),
+      0
+    );
+
+    const incResponse = await axios.get(
+      `http://localhost:8080/api/income/profile/${financialProfileId}`
+    );
+
+    const incItems = incResponse.data || [];
+    setIncomeList(incItems);
+
+    const incomeTotal = incItems.reduce(
+      (sum, item) => sum + (Number(item.amount) || 0),
+      0
+    );
+
+    const profileRes = await axios
+      .get(
+        `http://localhost:8080/api/financialprofile/${financialProfileId}`
+      )
+      .catch(() => null);
+
+    if (profileRes && profileRes.data) {
+      setInputs((prev) => ({
+        ...prev,
+        monthlyIncome:
+          profileRes.data.monthlyIncome ?? incomeTotal ?? 0,
+        currentSavings:
+          profileRes.data.currentSavings ?? 0,
+        debt:
+          profileRes.data.debt ?? 0,
+        targetGoalAmount:
+          profileRes.data.targetGoalAmount ?? 0,
+        monthlyExpenses:
+          expenseTotal
+      }));
+    } else {
+      setInputs((prev) => ({
+        ...prev,
+        monthlyExpenses: expenseTotal,
+        monthlyIncome:
+          incomeTotal > 0
+            ? incomeTotal
+            : prev.monthlyIncome
+      }));
     }
-  };
+  } catch (error) {
+    console.error(
+      'Failed to fetch financial data:',
+      error
+    );
+  }
+};
 
   const fetchFinancialScore = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/financialprofile/${userId}/financialscore`);
+      const response = await axios.get(`http://localhost:8080/api/financialprofile/${financialProfileId}/financialscore`);
       setFinancialScore(response.data || 0);
     } catch (error) {
       console.error('Failed to fetch Financial Score:', error.message);
@@ -89,9 +133,11 @@ function Dashboard() {
     fetchFinancialScore();
   };
 
-  useEffect(() => {
+  useEffect(() =>{
+    if(financialProfileId) {
     refreshAll();
-  }, [userId]);
+    }
+  }, [financialProfileId]);
 
   const fetchForecast = async () => {
     try {
@@ -108,10 +154,10 @@ function Dashboard() {
 
   const saveProfileToBackend = async (updatedFields) => {
     try {
-      await axios.put(`http://localhost:8080/api/financialprofile/${userId}`, {
+      await axios.put(`http://localhost:8080/api/financialprofile/${financialProfileId}`, {
         monthlyIncome: updatedFields.monthlyIncome,
         currentSavings: updatedFields.currentSavings,
-        debt: updatedFields.debt || 0
+        debt: updatedFields.debt ?? 0
       });
       fetchFinancialScore();
     } catch (error) {
@@ -200,7 +246,7 @@ function Dashboard() {
               </div>
 
               <div className="card metric-card">
-                <h3>Current Balance</h3>
+                <h3>Current Savings</h3>
                 <p className="metric-value">${inputs.currentSavings.toLocaleString()}</p>
               </div>
               <div className="card metric-card">
@@ -265,7 +311,7 @@ function Dashboard() {
 
         {activeTab === 'simulation' && (
           <SimulationView 
-            financialProfileId={userId} 
+            financialProfileId={financialProfileId} 
             currentSavings={inputs.currentSavings}
             monthlyIncome={inputs.monthlyIncome}
             monthlyExpenses={inputs.monthlyExpenses}
@@ -273,11 +319,11 @@ function Dashboard() {
         )}
 
         {activeTab === 'income' && (
-          <IncomeView onIncomeChange={refreshAll} incomes={incomeList} financialProfileId={userId} />
+          <IncomeView onIncomeChange={refreshAll} incomes={incomeList} financialProfileId={financialProfileId} />
         )}
 
         {activeTab === 'expenses' && (
-          <ExpensesView onExpenseChange={refreshAll} expenses={expensesList} limits={categoryLimits} financialProfileId={userId} />
+          <ExpensesView onExpenseChange={refreshAll} expenses={expensesList} limits={categoryLimits} financialProfileId={financialProfileId} />
         )}
 
         {activeTab === 'settings' && (

@@ -63,7 +63,7 @@ export default function CopilotInsights({ inputs, expenses = [], categoryLimits 
   return (
     <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.65)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.07)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0, color: '#f8fafc' }}>🤖 Connected Copilot Insights</h3>
+        <h3 style={{ margin: 0, color: '#f8fafc' }}> </h3>
         <span style={{ fontSize: '0.75rem', backgroundColor: '#3b82f622', color: '#60a5fa', padding: '2px 8px', borderRadius: '10px' }}>
           Live Sync Active
         </span>

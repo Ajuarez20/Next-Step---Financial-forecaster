@@ -5,8 +5,8 @@ import axios from 'axios';
 export default function RegistrationForm() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
+    firstname: '',
+    lastname: '',
     email: '',
     password: ''
   });
